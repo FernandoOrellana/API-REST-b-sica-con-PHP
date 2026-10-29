@@ -1,12 +1,14 @@
 package com.uth.api_rest.data.repository
 
 import android.content.Context
+import android.util.Log
 import com.uth.api_rest.data.api.RetrofitClient
 import com.uth.api_rest.data.model.Categoria
 import com.uth.api_rest.data.model.Producto
 import com.uth.api_rest.data.model.RegistroIngreso
 import com.uth.api_rest.data.model.RegistroRetiro
 import com.uth.api_rest.data.model.Resource
+import com.uth.api_rest.data.model.RetiroRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -150,23 +152,27 @@ class ProductoRepository(private val context: Context) {
 
     suspend fun retirarStock(idProducto: Int, cantidad: Int, motivo: String): Resource<Unit> = withContext(Dispatchers.IO) {
         try {
-            val payload = mapOf(
-                "ID_Producto" to idProducto,
-                "cantidad" to cantidad,
-                "motivo" to motivo
+            val payload = RetiroRequest(
+                idProducto = idProducto,
+                cantidad = cantidad,
+                motivo = motivo,
+                idUsuario = 1
             )
+            Log.d("RETIRO", "Enviando: ID_Producto=$idProducto, cantidad=$cantidad, motivo=$motivo")
             val response = apiService.retirarStock(payload)
             val body = response.body()
+            Log.d("RETIRO", "Respuesta HTTP ${response.code()} body=$body")
             if (response.isSuccessful && body != null) {
                 if (body.ok) {
                     Resource.Success(Unit)
                 } else {
-                    Resource.Error(body.error ?: "Error al realizar el retiro")
+                    Resource.Error(body.error ?: body.mensaje ?: "Error al realizar el retiro")
                 }
             } else {
                 Resource.Error(mensajeError(response))
             }
         } catch (e: Exception) {
+            Log.e("RETIRO", "Excepción: ${e.localizedMessage}", e)
             Resource.Error("Error de conexión al retirar stock: ${e.localizedMessage}", e)
         }
     }

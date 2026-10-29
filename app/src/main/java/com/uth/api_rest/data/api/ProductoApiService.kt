@@ -7,6 +7,7 @@ import com.uth.api_rest.data.model.LoginRequest
 import com.uth.api_rest.data.model.LoginResponse
 import com.uth.api_rest.data.model.RegistroIngreso
 import com.uth.api_rest.data.model.RegistroRetiro
+import com.uth.api_rest.data.model.RetiroRequest
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -42,7 +43,7 @@ interface ProductoApiService {
     suspend fun crearCategoria(@Body categoria: Map<String, String>): Response<ApiResponse<Unit>>
 
     @POST("api/retirar")
-    suspend fun retirarStock(@Body body: Map<String, Any>): Response<ApiResponse<Unit>>
+    suspend fun retirarStock(@Body body: RetiroRequest): Response<ApiResponse<Unit>>
 
     @GET("api/ingresos")
     suspend fun getIngresos(): Response<ApiResponse<List<RegistroIngreso>>>
