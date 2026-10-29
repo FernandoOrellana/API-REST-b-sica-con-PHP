@@ -3,6 +3,8 @@ package com.uth.api_rest.data.api
 import com.uth.api_rest.data.model.ApiResponse
 import com.uth.api_rest.data.model.Categoria
 import com.uth.api_rest.data.model.Producto
+import com.uth.api_rest.data.model.LoginRequest
+import com.uth.api_rest.data.model.LoginResponse
 import com.uth.api_rest.data.model.RegistroIngreso
 import com.uth.api_rest.data.model.RegistroRetiro
 import retrofit2.Response
@@ -14,6 +16,9 @@ import retrofit2.http.PUT
 import retrofit2.http.Query
 
 interface ProductoApiService {
+
+    @POST("api/login")
+    suspend fun login(@Body login: LoginRequest): Response<ApiResponse<LoginResponse>>
 
     @GET("api/productos")
     suspend fun getProductos(): Response<ApiResponse<List<Producto>>>

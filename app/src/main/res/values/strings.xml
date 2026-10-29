@@ -35,4 +35,12 @@
     <string name="error_campo_requerido">Este campo es requerido</string>
     <string name="stock_badge">Stock: %1$d</string>
     <string name="precio_format">$%1$.2f</string>
+    <string name="action_cerrar_sesion">Cerrar sesión</string>
+    <string name="msg_sesion_requerida">Debes iniciar sesión para realizar esta acción</string>
+    <string name="msg_sesion_cerrada">Sesión cerrada</string>
+    <string name="hint_usuario">Usuario</string>
+    <string name="hint_password">Contraseña</string>
+    <string name="btn_entrar">Entrar</string>
+    <string name="error_campos_vacios">Ingresa usuario y contraseña</string>
+    <string name="error_credenciales">Usuario o contraseña incorrectos</string>
 </resources>

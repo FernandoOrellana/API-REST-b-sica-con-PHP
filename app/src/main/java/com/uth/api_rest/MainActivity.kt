@@ -1,5 +1,6 @@
 package com.uth.api_rest
 
+import android.content.Intent
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -26,6 +27,8 @@ import com.uth.api_rest.databinding.DialogHistorialBinding
 import com.uth.api_rest.databinding.DialogNuevaCategoriaBinding
 import com.uth.api_rest.databinding.DialogProductoBinding
 import com.uth.api_rest.databinding.DialogRetirarBinding
+import com.uth.api_rest.ui.AuthViewModel
+import com.uth.api_rest.ui.LoginActivity
 import com.uth.api_rest.ui.ProductoViewModel
 import com.uth.api_rest.ui.adapter.HistorialAdapter
 import com.uth.api_rest.ui.adapter.HistorialItem
@@ -35,6 +38,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val viewModel: ProductoViewModel by viewModels()
+    private val authViewModel: AuthViewModel by viewModels()
     private lateinit var adapter: ProductoAdapter
 
     private var listaCategorias: List<Categoria> = emptyList()
@@ -58,8 +62,20 @@ class MainActivity : AppCompatActivity() {
         setupListeners()
         observeViewModel()
 
+        if (!authViewModel.haySesion()) {
+            irALogin()
+            return
+        }
+
         viewModel.cargarProductos()
         viewModel.cargarCategorias()
+    }
+
+    private fun irALogin() {
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        startActivity(intent)
+        finish()
     }
 
     private fun setupToolbar() {
@@ -78,6 +94,12 @@ class MainActivity : AppCompatActivity() {
                     mostrarDialogoConfigUrl()
                     true
                 }
+                R.id.action_cerrar_sesion -> {
+                    authViewModel.cerrarSesion()
+                    Toast.makeText(this, getString(R.string.msg_sesion_cerrada), Toast.LENGTH_SHORT).show()
+                    irALogin()
+                    true
+                }
                 else -> false
             }
         }
@@ -85,9 +107,27 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupRecyclerView() {
         adapter = ProductoAdapter(
-            onEditClick = { producto -> mostrarDialogoProducto(producto) },
-            onDeleteClick = { producto -> mostrarDialogoConfirmarEliminar(producto) },
-            onWithdrawClick = { producto -> mostrarDialogoRetirarStock(producto) }
+            onEditClick = { producto ->
+                if (!authViewModel.haySesion()) {
+                    Toast.makeText(this, getString(R.string.msg_sesion_requerida), Toast.LENGTH_SHORT).show()
+                    return@ProductoAdapter
+                }
+                mostrarDialogoProducto(producto)
+            },
+            onDeleteClick = { producto ->
+                if (!authViewModel.haySesion()) {
+                    Toast.makeText(this, getString(R.string.msg_sesion_requerida), Toast.LENGTH_SHORT).show()
+                    return@ProductoAdapter
+                }
+                mostrarDialogoConfirmarEliminar(producto)
+            },
+            onWithdrawClick = { producto ->
+                if (!authViewModel.haySesion()) {
+                    Toast.makeText(this, getString(R.string.msg_sesion_requerida), Toast.LENGTH_SHORT).show()
+                    return@ProductoAdapter
+                }
+                mostrarDialogoRetirarStock(producto)
+            }
         )
         binding.rvProductos.layoutManager = LinearLayoutManager(this)
         binding.rvProductos.adapter = adapter
@@ -110,6 +150,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.fabAdd.setOnClickListener {
+            if (!authViewModel.haySesion()) {
+                Toast.makeText(this, getString(R.string.msg_sesion_requerida), Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
             mostrarDialogoProducto(null)
         }
     }

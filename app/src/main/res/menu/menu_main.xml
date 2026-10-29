@@ -19,4 +19,9 @@
         android:title="@string/action_config_url"
         app:showAsAction="never" />
 
+    <item
+        android:id="@+id/action_cerrar_sesion"
+        android:title="@string/action_cerrar_sesion"
+        app:showAsAction="never" />
+
 </menu>
