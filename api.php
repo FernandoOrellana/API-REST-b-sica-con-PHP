@@ -11,12 +11,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 // ===== CONEXIÓN A BASE DE DATOS (PDO) =====
-// NOTA: Cambia estas credenciales por las tuyas o usa variables de entorno.
-$host    = getenv('DB_HOST') ?: '192.168.100.20';
-$port    = getenv('DB_PORT') ?: '510';
-$db      = getenv('DB_NAME') ?: 'API_Rest';
-$user    = getenv('DB_USER') ?: 'AdminBD';
-$pass    = getenv('DB_PASS') ?: '011081';
+
+$host    = getenv('DB_HOST') ?: '';
+$port    = getenv('DB_PORT') ?: '';
+$db      = getenv('DB_NAME') ?: '';
+$user    = getenv('DB_USER') ?: '';
+$pass    = getenv('DB_PASS') ?: '';
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;port=$port;dbname=$db;charset=$charset";
