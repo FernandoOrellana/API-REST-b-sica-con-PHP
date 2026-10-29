@@ -4,6 +4,8 @@ import android.content.Context
 import com.uth.api_rest.data.api.RetrofitClient
 import com.uth.api_rest.data.model.Categoria
 import com.uth.api_rest.data.model.Producto
+import com.uth.api_rest.data.model.RegistroIngreso
+import com.uth.api_rest.data.model.RegistroRetiro
 import com.uth.api_rest.data.model.Resource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -99,6 +101,84 @@ class ProductoRepository(private val context: Context) {
             }
         } catch (e: Exception) {
             Resource.Error("Error al cargar categorías: ${e.localizedMessage}", e)
+        }
+    }
+
+    suspend fun crearCategoria(nombreCategoria: String): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val payload = mapOf("Categoria" to nombreCategoria)
+            val response = apiService.crearCategoria(payload)
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                if (body.ok) {
+                    Resource.Success(Unit)
+                } else {
+                    Resource.Error(body.error ?: "Error al guardar categoría")
+                }
+            } else {
+                Resource.Error("Error HTTP ${response.code()}: ${response.message()}")
+            }
+        } catch (e: Exception) {
+            Resource.Error("Error al crear categoría: ${e.localizedMessage}", e)
+        }
+    }
+
+    suspend fun retirarStock(idProducto: Int, cantidad: Int, motivo: String): Resource<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val payload = mapOf(
+                "ID_Producto" to idProducto,
+                "cantidad" to cantidad,
+                "motivo" to motivo
+            )
+            val response = apiService.retirarStock(payload)
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                if (body.ok) {
+                    Resource.Success(Unit)
+                } else {
+                    Resource.Error(body.error ?: "Error al realizar el retiro")
+                }
+            } else {
+                Resource.Error("Error HTTP ${response.code()}: ${response.message()}")
+            }
+        } catch (e: Exception) {
+            Resource.Error("Error de conexión al retirar stock: ${e.localizedMessage}", e)
+        }
+    }
+
+    suspend fun getIngresos(): Resource<List<RegistroIngreso>> = withContext(Dispatchers.IO) {
+        try {
+            val response = apiService.getIngresos()
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                if (body.ok) {
+                    Resource.Success(body.data ?: emptyList())
+                } else {
+                    Resource.Error(body.error ?: "Error al obtener registro de ingresos")
+                }
+            } else {
+                Resource.Error("Error HTTP ${response.code()}: ${response.message()}")
+            }
+        } catch (e: Exception) {
+            Resource.Error("Error de conexión al obtener ingresos: ${e.localizedMessage}", e)
+        }
+    }
+
+    suspend fun getRetiros(): Resource<List<RegistroRetiro>> = withContext(Dispatchers.IO) {
+        try {
+            val response = apiService.getRetiros()
+            val body = response.body()
+            if (response.isSuccessful && body != null) {
+                if (body.ok) {
+                    Resource.Success(body.data ?: emptyList())
+                } else {
+                    Resource.Error(body.error ?: "Error al obtener registro de retiros")
+                }
+            } else {
+                Resource.Error("Error HTTP ${response.code()}: ${response.message()}")
+            }
+        } catch (e: Exception) {
+            Resource.Error("Error de conexión al obtener retiros: ${e.localizedMessage}", e)
         }
     }
 }

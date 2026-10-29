@@ -9,6 +9,11 @@
         app:showAsAction="ifRoom" />
 
     <item
+        android:id="@+id/action_ver_registros"
+        android:title="@string/action_ver_registros"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_config_url"
         android:icon="@drawable/ic_settings"
         android:title="@string/action_config_url"

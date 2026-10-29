@@ -5,6 +5,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -16,12 +17,18 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.uth.api_rest.data.api.RetrofitClient
+import com.uth.api_rest.data.model.Categoria
 import com.uth.api_rest.data.model.Producto
 import com.uth.api_rest.data.model.Resource
 import com.uth.api_rest.databinding.ActivityMainBinding
 import com.uth.api_rest.databinding.DialogConfigUrlBinding
+import com.uth.api_rest.databinding.DialogHistorialBinding
+import com.uth.api_rest.databinding.DialogNuevaCategoriaBinding
 import com.uth.api_rest.databinding.DialogProductoBinding
+import com.uth.api_rest.databinding.DialogRetirarBinding
 import com.uth.api_rest.ui.ProductoViewModel
+import com.uth.api_rest.ui.adapter.HistorialAdapter
+import com.uth.api_rest.ui.adapter.HistorialItem
 import com.uth.api_rest.ui.adapter.ProductoAdapter
 
 class MainActivity : AppCompatActivity() {
@@ -29,6 +36,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val viewModel: ProductoViewModel by viewModels()
     private lateinit var adapter: ProductoAdapter
+
+    private var listaCategorias: List<Categoria> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,6 +59,7 @@ class MainActivity : AppCompatActivity() {
         observeViewModel()
 
         viewModel.cargarProductos()
+        viewModel.cargarCategorias()
     }
 
     private fun setupToolbar() {
@@ -57,6 +67,11 @@ class MainActivity : AppCompatActivity() {
             when (menuItem.itemId) {
                 R.id.action_refresh -> {
                     viewModel.cargarProductos()
+                    viewModel.cargarCategorias()
+                    true
+                }
+                R.id.action_ver_registros -> {
+                    mostrarDialogoHistorial()
                     true
                 }
                 R.id.action_config_url -> {
@@ -71,7 +86,8 @@ class MainActivity : AppCompatActivity() {
     private fun setupRecyclerView() {
         adapter = ProductoAdapter(
             onEditClick = { producto -> mostrarDialogoProducto(producto) },
-            onDeleteClick = { producto -> mostrarDialogoConfirmarEliminar(producto) }
+            onDeleteClick = { producto -> mostrarDialogoConfirmarEliminar(producto) },
+            onWithdrawClick = { producto -> mostrarDialogoRetirarStock(producto) }
         )
         binding.rvProductos.layoutManager = LinearLayoutManager(this)
         binding.rvProductos.adapter = adapter
@@ -90,6 +106,7 @@ class MainActivity : AppCompatActivity() {
     private fun setupListeners() {
         binding.swipeRefresh.setOnRefreshListener {
             viewModel.cargarProductos()
+            viewModel.cargarCategorias()
         }
 
         binding.fabAdd.setOnClickListener {
@@ -98,6 +115,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun observeViewModel() {
+        viewModel.categoriasState.observe(this) { categorias ->
+            listaCategorias = categorias
+        }
+
         viewModel.productosState.observe(this) { resource ->
             when (resource) {
                 is Resource.Loading -> {
@@ -158,10 +179,19 @@ class MainActivity : AppCompatActivity() {
     private fun mostrarDialogoProducto(productoExistente: Producto?) {
         val dialogBinding = DialogProductoBinding.inflate(LayoutInflater.from(this))
 
+        val nombresCategorias = if (listaCategorias.isNotEmpty()) {
+            listaCategorias.map { it.nombre }
+        } else {
+            listOf("General")
+        }
+
+        val catAdapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, nombresCategorias)
+        dialogBinding.actvCategoria.setAdapter(catAdapter)
+
         if (productoExistente != null) {
             dialogBinding.tvDialogTitle.text = getString(R.string.title_editar_producto)
             dialogBinding.etNombre.setText(productoExistente.nombre)
-            dialogBinding.etIdCategoria.setText(productoExistente.idCategoria.toString())
+            dialogBinding.actvCategoria.setText(productoExistente.categoria ?: nombresCategorias.firstOrNull() ?: "", false)
             dialogBinding.etPCompra.setText(productoExistente.precioCompra.toString())
             dialogBinding.etPVenta.setText(productoExistente.precioVenta.toString())
             dialogBinding.etStockActual.setText(productoExistente.stockActual.toString())
@@ -169,7 +199,13 @@ class MainActivity : AppCompatActivity() {
             dialogBinding.etDescripcion.setText(productoExistente.descripcion ?: "")
         } else {
             dialogBinding.tvDialogTitle.text = getString(R.string.title_nuevo_producto)
-            dialogBinding.etIdCategoria.setText("1")
+            dialogBinding.actvCategoria.setText(nombresCategorias.firstOrNull() ?: "", false)
+        }
+
+        dialogBinding.btnNuevaCategoria.setOnClickListener {
+            mostrarDialogoNuevaCategoria { nuevaCatNombre ->
+                viewModel.crearCategoria(nuevaCatNombre)
+            }
         }
 
         val dialog = MaterialAlertDialogBuilder(this)
@@ -182,7 +218,7 @@ class MainActivity : AppCompatActivity() {
             val btnGuardar = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
             btnGuardar.setOnClickListener {
                 val nombre = dialogBinding.etNombre.text?.toString()?.trim() ?: ""
-                val idCategoriaStr = dialogBinding.etIdCategoria.text?.toString()?.trim() ?: "1"
+                val categoriaSeleccionada = dialogBinding.actvCategoria.text?.toString()?.trim() ?: ""
                 val pCompraStr = dialogBinding.etPCompra.text?.toString()?.trim() ?: "0"
                 val pVentaStr = dialogBinding.etPVenta.text?.toString()?.trim() ?: "0"
                 val stockActualStr = dialogBinding.etStockActual.text?.toString()?.trim() ?: "0"
@@ -199,7 +235,9 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 if (esValido) {
-                    val idCategoria = idCategoriaStr.toIntOrNull() ?: 1
+                    val catEncontrada = listaCategorias.find { it.nombre.equals(categoriaSeleccionada, ignoreCase = true) }
+                    val selectedCategoriaId = catEncontrada?.id ?: 1
+
                     val pCompra = pCompraStr.toDoubleOrNull() ?: 0.0
                     val pVenta = pVentaStr.toDoubleOrNull() ?: 0.0
                     val stockActual = stockActualStr.toIntOrNull() ?: 0
@@ -211,7 +249,8 @@ class MainActivity : AppCompatActivity() {
                         id = targetId,
                         idProducto = targetId,
                         nombre = nombre,
-                        idCategoria = idCategoria,
+                        idCategoria = selectedCategoriaId,
+                        categoria = categoriaSeleccionada,
                         precioCompra = pCompra,
                         precioVenta = pVenta,
                         stockActual = stockActual,
@@ -228,6 +267,104 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
+        dialog.show()
+    }
+
+    private fun mostrarDialogoNuevaCategoria(onCategoriaCreada: (String) -> Unit) {
+        val dialogBinding = DialogNuevaCategoriaBinding.inflate(LayoutInflater.from(this))
+
+        MaterialAlertDialogBuilder(this)
+            .setView(dialogBinding.root)
+            .setPositiveButton(getString(R.string.btn_guardar)) { _, _ ->
+                val nombreCat = dialogBinding.etNombreCategoria.text?.toString()?.trim() ?: ""
+                if (nombreCat.isNotEmpty()) {
+                    onCategoriaCreada(nombreCat)
+                }
+            }
+            .setNegativeButton(getString(R.string.btn_cancelar), null)
+            .show()
+    }
+
+    private fun mostrarDialogoRetirarStock(producto: Producto) {
+        val dialogBinding = DialogRetirarBinding.inflate(LayoutInflater.from(this))
+
+        dialogBinding.tvInfoProductoStock.text = getString(
+            R.string.msg_stock_disponible,
+            producto.nombre,
+            producto.stockActual
+        )
+
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setView(dialogBinding.root)
+            .setPositiveButton(getString(R.string.btn_retirar), null)
+            .setNegativeButton(getString(R.string.btn_cancelar), null)
+            .create()
+
+        dialog.setOnShowListener {
+            val btnRetirar = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            btnRetirar.setOnClickListener {
+                val cantidadStr = dialogBinding.etCantidadRetirar.text?.toString()?.trim() ?: ""
+                val motivo = dialogBinding.etMotivoRetiro.text?.toString()?.trim() ?: "Salida de Inventario"
+                val cantidad = cantidadStr.toIntOrNull() ?: 0
+
+                if (cantidad <= 0) {
+                    dialogBinding.tilCantidadRetirar.error = getString(R.string.error_campo_requerido)
+                } else if (cantidad > producto.stockActual) {
+                    dialogBinding.tilCantidadRetirar.error = getString(
+                        R.string.error_stock_insuficiente,
+                        producto.stockActual
+                    )
+                } else {
+                    dialogBinding.tilCantidadRetirar.error = null
+                    viewModel.retirarStock(producto, cantidad, motivo)
+                    dialog.dismiss()
+                }
+            }
+        }
+
+        dialog.show()
+    }
+
+    private fun mostrarDialogoHistorial() {
+        val dialogBinding = DialogHistorialBinding.inflate(LayoutInflater.from(this))
+        val historialAdapter = HistorialAdapter()
+
+        dialogBinding.rvHistorial.layoutManager = LinearLayoutManager(this)
+        dialogBinding.rvHistorial.adapter = historialAdapter
+
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setView(dialogBinding.root)
+            .setNegativeButton("Cerrar", null)
+            .create()
+
+        viewModel.retirosState.observe(this) { resource ->
+            if (resource is Resource.Success) {
+                val retirosItems = resource.data.map { HistorialItem.Retiro(it) }
+                historialAdapter.submitList(retirosItems)
+                dialogBinding.tvEmptyHistorial.visibility = if (retirosItems.isEmpty()) View.VISIBLE else View.GONE
+            }
+        }
+
+        viewModel.ingresosState.observe(this) { resource ->
+            if (resource is Resource.Success) {
+                val ingresosItems = resource.data.map { HistorialItem.Ingreso(it) }
+                historialAdapter.submitList(ingresosItems)
+                dialogBinding.tvEmptyHistorial.visibility = if (ingresosItems.isEmpty()) View.VISIBLE else View.GONE
+            }
+        }
+
+        dialogBinding.toggleGroupHistorial.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (isChecked) {
+                if (checkedId == R.id.btnTabRetiros) {
+                    viewModel.cargarRetiros()
+                } else if (checkedId == R.id.btnTabIngresos) {
+                    viewModel.cargarIngresos()
+                }
+            }
+        }
+
+        viewModel.cargarRetiros()
 
         dialog.show()
     }
@@ -258,6 +395,7 @@ class MainActivity : AppCompatActivity() {
                     RetrofitClient.setBaseUrl(this, newUrl)
                     Toast.makeText(this, "URL actualizada: ${RetrofitClient.getBaseUrl(this)}", Toast.LENGTH_SHORT).show()
                     viewModel.cargarProductos()
+                    viewModel.cargarCategorias()
                 }
             }
             .setNegativeButton(getString(R.string.btn_cancelar), null)

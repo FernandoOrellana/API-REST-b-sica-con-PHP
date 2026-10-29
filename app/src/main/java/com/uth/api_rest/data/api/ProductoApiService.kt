@@ -3,6 +3,8 @@ package com.uth.api_rest.data.api
 import com.uth.api_rest.data.model.ApiResponse
 import com.uth.api_rest.data.model.Categoria
 import com.uth.api_rest.data.model.Producto
+import com.uth.api_rest.data.model.RegistroIngreso
+import com.uth.api_rest.data.model.RegistroRetiro
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -30,4 +32,16 @@ interface ProductoApiService {
 
     @GET("api/categorias")
     suspend fun getCategorias(): Response<ApiResponse<List<Categoria>>>
+
+    @POST("api/categorias")
+    suspend fun crearCategoria(@Body categoria: Map<String, String>): Response<ApiResponse<Unit>>
+
+    @POST("api/retirar")
+    suspend fun retirarStock(@Body body: Map<String, Any>): Response<ApiResponse<Unit>>
+
+    @GET("api/ingresos")
+    suspend fun getIngresos(): Response<ApiResponse<List<RegistroIngreso>>>
+
+    @GET("api/retiros")
+    suspend fun getRetiros(): Response<ApiResponse<List<RegistroRetiro>>>
 }

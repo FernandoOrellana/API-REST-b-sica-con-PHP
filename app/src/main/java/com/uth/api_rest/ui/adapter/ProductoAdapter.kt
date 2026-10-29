@@ -16,6 +16,7 @@ import java.util.Locale
 class ProductoAdapter(
     private val onEditClick: (Producto) -> Unit,
     private val onDeleteClick: (Producto) -> Unit,
+    private val onWithdrawClick: (Producto) -> Unit
 ) : ListAdapter<Producto, ProductoAdapter.ProductoViewHolder>(ProductoDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductoViewHolder {
@@ -77,6 +78,7 @@ class ProductoAdapter(
             }
             binding.tvStock.background = drawable
 
+            binding.btnWithdraw.setOnClickListener { onWithdrawClick(producto) }
             binding.btnEdit.setOnClickListener { onEditClick(producto) }
             binding.btnDelete.setOnClickListener { onDeleteClick(producto) }
         }
