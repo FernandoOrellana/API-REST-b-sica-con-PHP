@@ -213,6 +213,8 @@ class MainActivity : AppCompatActivity() {
                 }
                 is Resource.Error -> {
                     binding.progressIndicator.visibility = View.GONE
+                    // Mostrar el error exacto del servidor en un Toast (más visible) y en el Snackbar
+                    Toast.makeText(this, "Error: ${resource.message}", Toast.LENGTH_LONG).show()
                     Snackbar.make(binding.root, resource.message, Snackbar.LENGTH_LONG).show()
                     viewModel.resetOperacionState()
                 }
