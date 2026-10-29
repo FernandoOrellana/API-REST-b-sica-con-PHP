@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">Control de Inventario</string>
+    <string name="action_refresh">Actualizar</string>
+    <string name="action_config_url">Configurar URL API</string>
+    <string name="title_config_url">Configuración de servidor API</string>
+    <string name="hint_base_url">URL Base de la API (ej: http://10.0.2.2:3000/)</string>
+    <string name="msg_config_url_info">Escriba la dirección URL donde está alojada su API REST (debe terminar en /).</string>
+    <string name="btn_guardar">Guardar</string>
+    <string name="btn_cancelar">Cancelar</string>
+    <string name="btn_eliminar">Eliminar</string>
+    <string name="title_nuevo_producto">Nuevo Producto</string>
+    <string name="title_editar_producto">Editar Producto</string>
+    <string name="label_nombre">Nombre del producto</string>
+    <string name="label_descripcion">Descripción</string>
+    <string name="label_id_categoria">ID Categoría</string>
+    <string name="label_pcompra">Precio Compra ($)</string>
+    <string name="label_pventa">Precio Venta ($)</string>
+    <string name="label_stock_actual">Stock Actual</string>
+    <string name="label_stock_minimo">Stock Mínimo</string>
+    <string name="msg_confirm_delete">¿Está seguro de que desea eliminar el producto \"%1$s\"?</string>
+    <string name="title_confirm_delete">Confirmar eliminación</string>
+    <string name="search_hint">Buscar producto por nombre, categoría&#8230;</string>
+    <string name="empty_products">No hay productos disponibles.</string>
+    <string name="empty_search">No se encontraron productos coincidentes.</string>
+    <string name="error_campo_requerido">Este campo es requerido</string>
+    <string name="stock_badge">Stock: %1$d</string>
+    <string name="precio_format">$%1$.2f</string>
+</resources>
