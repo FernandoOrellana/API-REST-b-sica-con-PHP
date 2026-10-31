@@ -1,4 +1,4 @@
-# API-REST-b-sica-con-PHP
+# API-REST-basica-con-PHP-Grupo-5
 José Fernando Orellana Reyes (202210010352)
 
 Carlos Roberto Cardenas Martínez (202430010599)
